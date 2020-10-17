@@ -1,0 +1,41 @@
+server:
+  port: 56010
+
+spring:
+  application:
+    name: juhe-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        cluster-name: DEFAULT
+        namespace: b36ded08-caa6-408a-9eee-cc50698693be
+
+
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+
+      routes:
+        - id: zhifubao_route
+          uri: lb://juhe-zhifubao
+          #满足了下面两个条件，请求才会被转发到zhifubao
+          predicates:
+            #匹配请求头中user-agent的值中包含AlipayClient的请求
+            - Header=User-Agent, .+AlipayClient.+
+            #匹配请求路径为/pay/page,/create/ali/pay的请求
+            - Path=/pay/page,/create/ali/pay
+
+        - id: wx_route
+          uri: lb://juhe-wx
+          predicates:
+            - Header=User-Agent, .+MicroMessenger.+
+            - Path=/pay/page,/create/wx/pay
+
